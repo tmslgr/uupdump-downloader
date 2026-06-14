@@ -1,0 +1,30 @@
+[build-system]
+requires = ["setuptools>=61"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "uupdumpcli"
+version = "0.1.0"
+description = "CLI to browse and download UUP files via the UUP dump JSON API"
+readme = "README.md"
+requires-python = ">=3.9"
+license = { text = "MIT" }
+authors = [
+  { name = "tmslgr" }
+]
+dependencies = [
+  "requests>=2.31.0",
+  "tqdm>=4.66.0"
+]
+
+[project.scripts]
+uupdump = "uupdumpcli.cli:main"
+
+[tool.setuptools]
+package-dir = {"" = "src"}
+
+[tool.setuptools.packages.find]
+where = ["src"]
+include = ["uupdumpcli*"]
+
+
