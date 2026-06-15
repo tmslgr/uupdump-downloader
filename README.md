@@ -1,10 +1,10 @@
-uupdumpcli
+# uupdump-downloader
 
 Forked from the project (https://github.com/phantomic12/uupdumpapi-downloader)[https://github.com/phantomic12/uupdumpapi-downloader]
 
 Command-line utility to browse and download UUP files using the UUP dump JSON API.
 
-Install (editable)
+# Install (editable)
 
 ```bash
 python -m venv .venv
@@ -12,7 +12,7 @@ source .venv/bin/activate
 pip install -e .
 ```
 
-Usage
+# Usage
 
 - List builds:
 
