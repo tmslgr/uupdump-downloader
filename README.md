@@ -1,6 +1,6 @@
 # uupdump-downloader
 
-Forked from the project (https://github.com/phantomic12/uupdumpapi-downloader)[https://github.com/phantomic12/uupdumpapi-downloader]
+Forked from the project https://github.com/phantomic12/uupdumpapi-downloader
 
 Command-line utility to browse and download UUP files using the UUP dump JSON API.
 
