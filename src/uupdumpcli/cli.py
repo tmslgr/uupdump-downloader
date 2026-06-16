@@ -10,6 +10,7 @@ import re
 from . import __version__
 from .api import (
     DEFAULT_BASE_URL,
+    DEFAULT_WEB_URL,
     UUPDumpApiError,
     filter_update_files,
     get_downloads,
@@ -52,7 +53,7 @@ def cmd_show(args: argparse.Namespace) -> int:
     if args.links:
         meta, files = get_downloads(args.update_id, args.lang, args.edition, base_url=args.base_url)
         if args.updates_only:
-            keep = set(filter_update_files(files.keys()))
+            keep = filter_update_files(args.update_id, list(files.keys()), web_url=args.web_url)
             files = {name: info for name, info in files.items() if name in keep}
         data["meta"] = meta
         data["files"] = files
@@ -60,7 +61,7 @@ def cmd_show(args: argparse.Namespace) -> int:
         meta, files = get_downloads(args.update_id, base_url=args.base_url)
         names = list(files.keys())
         if args.updates_only:
-            names = filter_update_files(names)
+            names = filter_update_files(args.update_id, names, web_url=args.web_url)
         data = {"meta": meta, "files": names}
     if args.json:
         _print_json(data)
@@ -87,7 +88,7 @@ def cmd_show(args: argparse.Namespace) -> int:
 def cmd_download(args: argparse.Namespace) -> int:
     meta, files = get_downloads(args.update_id, args.lang, args.edition, base_url=args.base_url)
     if args.updates_only:
-        keep = set(filter_update_files(files.keys()))
+        keep = filter_update_files(args.update_id, list(files.keys()), web_url=args.web_url)
         files = {name: info for name, info in files.items() if name in keep}
     # Optional filtering for testing
     if args.include_regex:
@@ -147,6 +148,7 @@ def cmd_verify(args: argparse.Namespace) -> int:
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(prog="uupdump", description="UUP dump JSON API CLI")
     parser.add_argument("--base-url", default=DEFAULT_BASE_URL, help="Override JSON API base URL")
+    parser.add_argument("--web-url", default=DEFAULT_WEB_URL, help="Override uupdump web base URL (used for --updates-only)")
 
     sub = parser.add_subparsers(dest="command", required=True)
 

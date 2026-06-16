@@ -1,10 +1,10 @@
 from __future__ import annotations
 
 import os
-import re
 import time
-from dataclasses import dataclass
-from typing import Dict, Iterable, List, Mapping, Optional, Tuple
+from html.parser import HTMLParser
+from typing import Dict, List, Mapping, Optional, Set, Tuple
+from urllib.parse import parse_qs, urlparse
 
 import requests
 
@@ -12,23 +12,45 @@ import requests
 DEFAULT_BASE_URL = os.environ.get(
     "UUPDUMP_JSON_API_BASE_URL", "https://api.uupdump.net"
 )
+DEFAULT_WEB_URL = os.environ.get(
+    "UUPDUMP_WEB_BASE_URL", "https://uupdump.net"
+)
 
 
 class UUPDumpApiError(Exception):
     pass
 
 
-# Matches the cumulative update / servicing stack cabs, mirroring the
-# "!updates" filter on uupdump.net/findfiles.php (SSU + LCU/.NET cabs).
-UPDATES_FILE_PATTERN = re.compile(
-    r"^(SSU-[\d.]+-(x86|x64|arm64)\.cab"
-    r"|Windows1[01]\.0-KB\d+-(x86|x64|arm64)\.cab)$",
-    re.IGNORECASE,
-)
+class _FileLinkParser(HTMLParser):
+    """Extracts filenames from the file= query param in links on findfiles.php."""
+
+    def __init__(self) -> None:
+        super().__init__()
+        self.filenames: List[str] = []
+
+    def handle_starttag(self, tag: str, attrs: list) -> None:
+        if tag != "a":
+            return
+        for name, value in attrs:
+            if name == "href" and value:
+                qs = parse_qs(urlparse(value).query)
+                if "file" in qs:
+                    self.filenames.extend(qs["file"])
 
 
-def filter_update_files(names: Iterable[str]) -> List[str]:
-    return [name for name in names if UPDATES_FILE_PATTERN.match(name)]
+def get_update_filenames(update_id: str, *, web_url: str = DEFAULT_WEB_URL) -> Set[str]:
+    """Return the set of filenames listed by the server-side !updates filter."""
+    url = f"{web_url.rstrip('/')}/findfiles.php"
+    resp = requests.get(url, params={"id": update_id, "q": "!updates"}, timeout=60)
+    resp.raise_for_status()
+    parser = _FileLinkParser()
+    parser.feed(resp.text)
+    return set(parser.filenames)
+
+
+def filter_update_files(update_id: str, names: List[str], *, web_url: str = DEFAULT_WEB_URL) -> List[str]:
+    allowed = get_update_filenames(update_id, web_url=web_url)
+    return [name for name in names if name in allowed]
 
 
 def _raise_for_api_error(payload: Mapping) -> None:
